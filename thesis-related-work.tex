@@ -1,0 +1,230 @@
+% !TeX spellcheck = en_US
+
+\section{Related Work}
+
+\subsection{Notation}
+
+\begin{description}
+	\item[Coordinates]
+		Coordinates are denoted as an explicit pair of coordinates $(x, y)$ or a vector of coordinates $\vector{x}$.
+	% Images and other mapping are in function notation, despite beeing only stored or accessed in a discrete (and not a continous way).
+
+\end{description}
+
+\begin{tabular}{c p{0.8\textwidth}}
+	\image & The input color image \\ 
+	\tonemappedimage & The tone mapped color image \\ 
+	\finalimage & The tone mapped color image with glare \\
+	\luminance & The luminance of an image (where $(r, g, b) \mapsto 0.2126 \cdot r + 0.7152 \cdot g + 0.0722 \cdot b$)  \\
+	\tonemappedluminance & The tone mapped luminance \\
+	\contrast & The contrast of an image (see \cref{sec:tone-mapping}) \\
+	\modifiedcontrast & The modified contrast (see \contrast) \\
+	\response & The response of the human visual system to contrast (see \cref{sec:tone-mapping}) \\
+	\modifiedresponse & The modified response of the human visual system (see \response) \\
+	\aperture & The aperture of an optical system \\
+	\psf & The glare filter \\
+	\overlay & The bright pixels of an image, used for glaring \\
+	\glareoverlay & The glared bright pixels \\
+	
+	\laplace & The Laplace operator which is equivalent to $\partial_{xx} + \partial_{yy}$ \\
+	$\mathcal{F}$ & The Fourier transform where $\mathcal{F}[f(\vector{x})](\vector{u})$ denotes the Fourier transform of $f(\vector{x})$ evaluated at $\vector{u}$.
+	$\mathcal{F}^{-1}$ denotes the inverse Fourier transform. \\
+	
+	\imagewidth & The with of an image in pixels \\
+	\imageheight & The height of an image in pixels \\
+	\numscales & The number of scales of the discretized scale\hyp{}space \\
+	\numgauss & The number of levels of the Gaussian pyramid \\
+	\imagedomain & The image domain $[0, \imagewidth-1] \times [0, \imageheight-1]$ \\
+	
+	\blobthreshold & The blob threshold \\
+	\lightthreshold & The light threshold \\
+	
+	\parametertonemapping & The parameter for tone mapping \\
+	\parameterblending & The parameter for blending the tone mapped image and the glare overlay \\
+	
+	\gaussian & The Gaussian function (see~\Cref{eq:gaussian}) \\
+\end{tabular} 
+
+% TODO: Foundations
+
+\subsection{Density Map Visualization}
+\label{sec:density-map}
+
+\subsection{Tone Mapping Techniques}
+\label{sec:tone-mapping}
+
+The data we want to visualize could have arbitrary values and precision.
+The operation of transforming that data to standard fixed-precision integer values (\SI{8}{\bit} per color channel with values from 0 to 255) is called tone mapping.
+
+%tone mapping operators usually work on the luminance which is then used to modify the color image.
+Simple tone mapping operators include
+\begin{itemize}
+	\item linear mapping: $\tonemappedluminance (\vector{x}) = \frac{\luminance (\vector{x}) - \luminance_\text{min}}{\luminance_\text{max} - \luminance_\text{min}}$
+	
+	\item logarithmic mapping: $\tonemappedluminance (\vector{x}) = \frac{\log (\luminance (\vector{x}) - \luminance_\text{min} + 1)}{\log (\luminance_\text{max} - \luminance_\text{min} + 1)}$
+	
+	\item simple tone mapping operator of \citeauthor{Reinhard2002}~\cite{Reinhard2002}: $\tonemappedluminance (\vector{x}) = \frac{\luminance (\vector{x})}{1 + \luminance(\vector{x})}$
+	
+	\item gamma correction: $\tonemappedluminance (\vector{x}) = \luminance (\vector{x}) ^ \gamma$
+
+\end{itemize}
+The first two operators bring the luminance to the range $[0, 1]$, which can then be linearly mapped to the range of the display $[0, 255]$.
+Gamma correction can be used to map values from the range $[0, 1]$ to the range $[0, 1]$ in a non-linear way which resembles the %TODO: behavior of displays?
+
+% TODO: Something about tonemapping and maybe Reinhard02
+Another tone mapping technique was introduced by \citeauthor{Mantiuk2006}~\cite{Mantiuk2006}.
+%Their technique first calculates physical contrast and then the response of the human visuals system to that contrast.
+%They proposed different operations that work on this response to compress the dynamic range of the image.
+%After such an operation, the response is converted back to contrast values and then to luminance values.
+%
+% Something about using Gaussian pyramids
+%
+They proposed a framework based on the human perception of contrast.
+One application of the framework is tone mapping.
+The framework incorporates the following steps:
+\begin{enumerate}[label=Step \arabic{enumi}.,ref=Step \arabic{enumi},leftmargin=*]
+	\item \label{step:luminance}
+		Calculate the luminance \luminance{} from an image \image.
+	\item \label{step:contrast}
+		Calculate the contrast \contrast{} as differences from the logarithm\footnote{logarithm to base 10} of neighboring luminance pixels. 
+	\item \label{step:response}
+		Calculate the response \response{} from the contrast using a transducer function. 
+	\item \label{step:modify-response} 
+		Calculate the modified response \modifiedresponse. 
+	\item \label{step:modify-contrast} 
+		Calculate the modified contrast \modifiedcontrast{} from the modified response using the inverse transducer function. 
+	\item \label{step:modify-luminance}
+		Calculate the modified luminance \modifiedluminance{} by solving an optimization problem on the modified contrast. 
+	\item \label{step:modify-image}
+		Calculate the modified image \modifiedimage{} using the modified luminance and the original image. 
+\end{enumerate}
+From \ref{step:luminance} to \ref{step:modify-luminance} Gaussian pyramids are used to represent \luminance, \contrast, \response{} and the modified versions of them. 
+This is because the human visual system can perceive contrast for small regions close to each other or bigger regions farther apart.
+The Gaussian pyramid for the luminance is created by successively dividing the image width and height by a factor of two until one dimension would be smaller than three pixels.
+Except for the optimization problem in \ref{step:modify-luminance} and the construction of the pyramid in \ref{step:luminance}, operations only consider one level of a pyramid at a time.
+
+The contrast in \ref{step:contrast} is defined as the ratio of the luminance of neighboring pixels.
+As the contrast is in the $\log_{10}$ domain, the ratio can be reformulated as the difference of the logarithm of neighboring pixels.
+The contrast is calculated for neighboring pixels $\vector{u}$ and $\vector{v}$ as 
+\begin{align}
+	\label{eq:contrast}
+	\contrast^k (\vector{u}, \vector{v}) &= \log_{10} \frac{\luminance^k (\vector{u})}{\luminance^k (\vector{v})} \\
+	&= \log_{10} \luminance^k (\vector{u}) - \log_{10} \luminance^k (\vector{v}) \nonumber
+\end{align}
+where $k$ denotes the level of the Gaussian pyramid.
+The neighborhood of a pixel depends on the field of application of the framework.
+It can range from one pixel in \xdir{} and \ydirection{} to the whole image domain.
+
+The response of the human visual system in \ref{step:response} is calculated for each contrast value that was computed in the last step.
+The transducer function is constructed in a way that the response should change by one for a change in just\hyp{}noticeable\hyp{}difference.
+In \ref{step:modify-contrast} the inverse of this transducer function is used.
+% Equations and approximations for these functions are given by \citeauthor{Mantiuk2006}.
+
+For \ref{step:modify-response} multiple ways to modify the response were proposed, like \term{contrast mapping} and \term{contrast equalization}.
+To reduce contrast with \term{contrast mapping}, the response is multiplied with a constant between 0 and 1.
+\term{Contrast equalization} refers to equalizing the histogram of the contrast response. 
+
+In \ref{step:modify-luminance} an optimization problem has to solved, because the modified contrast does not necessarily correspond to an image.
+For the proposed optimization problem, an objective function
+\begin{align}
+\label{eq:optimization-problem}
+\sum_{k=0}^{\numgauss-1} \sum_{\vector{u} \in D} \sum_{\vector{v} \in \phi(\vector{u})} p (\modifiedcontrast^k (\vector{u}, \vector{v}) ) \cdot ( \modifiedluminance^k (\vector{u}) - \modifiedluminance^k (\vector{v}) - \modifiedcontrast^k (\vector{u}, \vector{v}) )^2
+\end{align}
+has to be minimized with regard to the modified luminance \modifiedluminance{} of pixels at the finest level of the Gaussian pyramid, where $\numgauss$ is the number of levels of the Gaussian pyramid and $\phi(\cdot)$ is the neighborhood of a pixel.
+In this function the factors $p(\cdot)$ are used to penalize a contrast mismatch. 
+A mismatch is less penalized for contrast values, to which the human visual system is less sensitive to.
+These factors and the size of the pixel neighborhood can be changed to fit the field of application.
+An efficient solution to the optimization problem was proposed using the biconjugate gradient method.
+Note that \modifiedluminance{} is in the $\log_{10}$ domain in this step, as it will be used like that in the next step.
+
+% TODO: Chage that !!
+The color reconstruction in \ref{step:modify-image} is done by desaturating the color and rescaling it by the tone mapped luminance.
+With the proposed reconstruction the average gray level is mapped to the RGB color $(0.5, 0.5, 0.5)$.
+\begin{align}
+\label{eq:modify-image}
+	\tonemappedimage(\vector{x}) &= \left(\frac{\image(\vector{x})}{\luminance(\vector{x})}\right)^\frac{s}{l_\text{max} - l_\text{min}} \cdot 10^{\frac{\modifiedluminance(\vector{x}) - l_\text{min}}{l_\text{max} - l_\text{min}}}
+\end{align}
+
+\subsection{Glare Simulation}
+\label{sec:glare-simulation}
+
+Glare can be used to make bright pixels in images appear brighter \cite[see][]{Spencer1995,Ritschel2009}.
+\Citeauthor{Spencer1995}~\cite{Spencer1995} divided glare into \term{bloom} and \term{flare}.
+\term{Bloom} or \term{veiling luminance} is a glow that reduces the contrast around bright objects.
+\term{Flare} is composed of the \term{lenticular halo} and the \term{ciliary corona}.
+The concentric colored rings around bright objects are called \term{lenticular halo} and the rays or needles radiating from bright objects are called \term{ciliary corona}.
+
+These features used to be generated from phenomenological results. % TODO: Citation
+
+Newer approaches \cite{Kakimoto2004,Ritschel2009} are based on wave optics.
+These approaches model the human eye as a optical system. The diffraction is approximated with the Fresnel diffraction by \citeauthor{Ritschel2009}~\cite{Ritschel2009} to get
+\begin{align}
+	\label{eq:fresnel}
+	\psf_{\lambda} (\vector{u}) &\approx \frac{1}{\lambda^2 d^2} \abs{ \mathcal{F}\left[\aperture(\vector{x}) \cdot E(\vector{x})\right](\vector{u}) }^2
+	\intertext{with}
+	E(\vector{x}) &= \exp\left( \frac{i \pi}{\lambda d} \left(\vector{x} \cdot \vector{x}\right) \right) \nonumber
+\end{align}
+or with the Fraunhofer diffraction by \citeauthor{Kakimoto2004}~\cite{Kakimoto2004} to get
+\begin{align}
+	\label{eq:fraunhofer}
+	\psf_{\lambda} (\vector{u}) &\approx \frac{1}{\lambda^2 d^2} \abs{ \mathcal{F}\left[\aperture(\vector{x})\right](\vector{u}) }^2 
+\end{align}
+for an aperture $A$, wavelength $\lambda$ and distance between pupil and retina $d$. 
+% $\mathcal{F}[f](\cdot)$ denotes the Fourier transform of $f$.
+% TODO: Something about coordinates (x, y) = (u, v) / (\lambda d) or so
+\Cref{eq:fresnel,eq:fraunhofer} only differ by the term $E$. %TODO: Something here
+
+To simulate glare as seen by humans, the aperture can be an image containing the parts of the eye that contribute to glaring \cite[see][Table 1]{Ritschel2009}. 
+\Citeauthor{Kakimoto2004} only used the pupil, eyelids, and eyelashes in their model of an human aperture.
+\Citeauthor{Ritschel2009} added lens particles, lens gratings, and vitreous particles to their model.
+They create a dynamic aperture by simulating movement of the particles, changes of the pupil size, and blinking.
+Using this dynamic aperture, the simulated glare changes slightly with time, which mimics real glare perceived by humans.
+% Dynamic glare could be perceived as brighter than static glare \cite{Ritschel2009}.
+To simulate glare produced by cameras, the aperture can be a diaphragm and optimally an attached camera-filter.
+
+To not recompute the PSF for each wavelength of light, the spectral PSF \psf{} can be approximated by summing up samples from one monochromatic PSF $\psf_{\lambda_0}$. 
+For $n$ samples for wavelengths between $\lambda_\text{min}$ and $\lambda_\text{max}$, the spectral PSF is
+\begin{align}
+	\label{eq:spectral-psf}
+	\psf (\vector{x}) &\approx \sum_{i = 0}^{n - 1} \rgb (\lambda_i) \cdot \psf_{\lambda_0} \left( \vector{x}_i \right)  \\
+	\intertext{with}
+	\lambda_i &= \lambda_\text{min} + i \cdot \frac{\lambda_\text{max} - \lambda_\text{min}}{n} \nonumber \\
+	\vector{x}_i &=  \frac{\lambda_0}{\lambda_i} \cdot \vector{x} \nonumber
+\end{align}
+where $\lambda_0$ is the wavelength of the precomputed PSF $\psf_{\lambda_0}$ and \rgb{} is the spectrum of the current wavelength in RGB color space.
+%The sample position is scaled by the ratio of the wavelength monochromatic PSF and the wavelength of the PSF that gets approximated.
+%All samples get multiplied by the RGB color of the current wavelength before summing them up.
+
+% TODO: Something about Ritchel2009
+
+With any approach (phenomenological or optics-based) the calculated PSF texture will be convolved with an image to simulate glare.
+To not blur the original image, the texture is only convolved with high intensity pixels.
+Alternatively this can be approximated by rendering billboards with the PSF texture on-top of the original image.
+
+\subsection{Blob Detection}
+\label{sec:blob-detection}
+
+\Citeauthor{Lindeberg1998}~\cite{Lindeberg1998} proposed a technique to detect blobs using the scale\hyp{}space
+\begin{align}
+	\label{eq:scalespace}
+	\scalespace (\vector{x}, \sigma) &= \gaussian(\vector{x}, \sigma) * \luminance (\vector{x}) 
+\end{align} of an luminance-image \luminance. 
+The three-dimensional scale\hyp{}space is defined by a convolution of the image with a Gaussian function 
+\begin{align}
+	\label{eq:gaussian}
+	\gaussian(\vector{x}, \sigma) &= \frac{1}{2 \pi \sigma^2} \exp\left( -\frac{\vector{x} \cdot \vector{x}}{2 \sigma^2} \right) 
+\end{align}
+with standard deviation $\sigma$.
+To find blobs the normalized Laplacian response 
+\begin{align}
+	\label{eq:normlaplace}
+	\normlaplacescalespace (\vector{x}, \sigma) &= \sigma^2 \laplace \scalespace(\vector{x}, \sigma) % \\
+	%	&= \sigma^2 \left( \partial_{xx} \scalespace(\vector{x}, \sigma) + \partial_{yy} \scalespace(\vector{x}, \sigma) \right) \nonumber
+\end{align}
+of the scale\hyp{}space can be used.
+A blob is then located at a local extremum with respect to $x$, $y$ and $\sigma$.
+Such an extremum of \normlaplacescalespace{} found at position $(\vector{x}_i, \sigma_j)$ corresponds to a blob at position $\vector{x}_i$ in the image with a radius proportional to $\sigma_j$.
+% Using the properties of the convolution we can see that the normalized Laplacian of $L$ is the same as the normalized Laplacian of the Gaussian convolved with the image.
+% TODO: Something with log-spacing or exp or so
+
+% TODO: Difference between this and other work

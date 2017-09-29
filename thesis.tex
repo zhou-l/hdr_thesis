@@ -1,0 +1,155 @@
+% !TeX spellcheck = en_US
+
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+
+\usepackage{microtype}
+
+\usepackage{cmap}
+
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\usepackage{hyphenat}
+
+\usepackage{enumitem}
+
+\usepackage{xspace}
+\usepackage{lmodern}
+%\usepackage{refcheck}
+\usepackage[style=alphabetic,backend=bibtex8]{biblatex}
+\bibliography{bibliography.bib}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\usepackage[binary-units]{siunitx}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\let \term \textit
+\let \vector \mathbf
+\let \modified \hat
+\let \final \bar
+\let \operator \operatorname
+\let \step \enquote
+\let \code \texttt
+
+\def \Cpp {C++}
+\def \DirectX {DirectX}
+\def \vertexshader {vertex shader}
+\def \Vertexshader {Vertex shader}
+\def \geometryshader {geometry shader}
+\def \Geometryshader {Geometry shader}
+\def \pixelshader {pixel shader}
+\def \Pixelshader {Pixel shader}
+\def \computeshader {compute shader}
+\def \Computeshader {Compute shader}
+\def \constantbuffer {constant buffer}
+
+\def \xdir {\ensuremath{x}\hyp{}}
+\def \xdirection {\ensuremath{x}\hyp{}direction}
+\def \ydirection {\ensuremath{y}\hyp{}direction}
+
+\def \oneD {one\hyp{}dimensional}
+\def \twoD {two\hyp{}dimensional}
+\def \threeD {three\hyp{}dimensional}
+
+\def \Fft {fast Fourier transform}
+\def \fft {FFT}
+
+\def \PARAMETER {P}
+\def \NUMBER {N}
+\def \THRESHOLD {T}
+
+\def \PSF {F}
+\def \IMAGE {I}
+\def \LUMINANCE {L}
+\def \SCALESPACE {S}
+\def \OVERLAY {B}
+\def \APERTURE {A}
+\def \BLOBMASK {M}
+
+\def \CONTRAST {G}
+\def \RESPONSE {R}
+
+\def \GAUSSIAN {g}
+
+\def \gaussian {\ensuremath{\GAUSSIAN}}
+
+\def \IMAGEDOMAIN {D}
+\def \imagewidth {\ensuremath{\NUMBER_x}}
+\def \imageheight {\ensuremath{\NUMBER_y}}
+\def \numscales {\ensuremath{\NUMBER_\sigma}}
+\def \numgauss {\ensuremath{\NUMBER_\GAUSSIAN}}
+\def \aperturesize {\ensuremath{\NUMBER_\APERTURE}}
+\def \glaresize {\ensuremath{\NUMBER_\PSF}}
+\def \imagedomain {\ensuremath{\IMAGEDOMAIN}}
+
+\def \parameterblending {\ensuremath{\PARAMETER_\OVERLAY}}
+\def \parametertonemapping {\ensuremath{\PARAMETER_\RESPONSE}}
+
+
+\def \psf {\ensuremath{\PSF}}
+\def \image {\ensuremath{\IMAGE}}
+\def \tonemappedimage {\ensuremath{\modified{\IMAGE}}}
+\def \finalimage {\ensuremath{\final{\IMAGE}}}
+\def \scalespace {\ensuremath{\SCALESPACE}}
+\def \luminance {\ensuremath{\LUMINANCE}}
+\def \blobmask {\ensuremath{\BLOBMASK}}
+\def \overlay {\ensuremath{\OVERLAY}}
+\def \glareoverlay {\ensuremath{\modified{\OVERLAY}}}
+\def \aperture {\ensuremath{\APERTURE}}
+
+\def \contrast {\ensuremath{\CONTRAST}}
+\def \modifiedcontrast {\ensuremath{\modified{\CONTRAST}}}
+\def \response {\ensuremath{\RESPONSE}}
+\def \modifiedresponse {\ensuremath{\modified{\RESPONSE}}}
+\def \modifiedluminance {\ensuremath{\modified{\LUMINANCE}}}
+\let \modifiedimage \tonemappedimage
+\let \tonemappedluminance \modifiedluminance
+
+\def \laplace {\ensuremath{\Delta}}
+\def \normlaplace {\ensuremath{\laplace_\text{norm}}}
+\def \normlaplacescalespace {\ensuremath{\normlaplace\scalespace}}
+
+\def \rgb {\ensuremath{\operator{RGB}}}
+
+\def \blobthreshold {\ensuremath{\THRESHOLD_\BLOBMASK}}
+\def \lightthreshold {\ensuremath{\THRESHOLD_\LUMINANCE}}
+
+\def \eg {e.g.\xspace}
+\def \etc {e.t.c.\xspace}
+\def \by {\ensuremath{\times}}
+
+\algnewcommand \algorithmicto {\textbf{to}} 
+\algrenewtext{For}[3] {$\algorithmicfor\ #1 \gets #2\ \algorithmicto\ #3\ \algorithmicdo$} 
+
+\DeclarePairedDelimiter {\abs} {\lvert}{\rvert}
+\DeclarePairedDelimiter {\ceil} {\lceil}{\rceil}
+\DeclarePairedDelimiter {\floor} {\lfloor}{\rfloor}
+
+\begin{document}
+	
+	\input{thesis-abstract.tex}
+	
+	\input{thesis-introduction.tex}
+	
+	\input{thesis-related-work.tex}
+	
+	\input{thesis-main.tex}
+	
+	\input{thesis-conclusion.tex}
+	
+	\nocite{*}
+
+	\printbibliography
+
+\end{document}
